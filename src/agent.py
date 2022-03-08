@@ -1,6 +1,6 @@
 from forta_agent import Finding, FindingType, FindingSeverity, get_web3_provider
 
-from .constants import ERC20_TRANSFER_ABI, SOLACE_TOKEN_ADDRESS, ZERO_ADDRESS, TELLER_ADDRESSES, TOKEN_THRESHOLD
+from .constants import ERC20_TRANSFER_ABI, SOLACE_TOKEN, ZERO_ADDRESS, TELLER_ADDRESSES, TOKEN_THRESHOLD, CHAIN_CONFIG
 
 
 MEDIUM_GAS_THRESHOLD = 1000000
@@ -24,11 +24,13 @@ def handle_transaction(transaction_event):
     # 1. ERC20 Transfer events
     transfers = transaction_event.filter_log(ERC20_TRANSFER_ABI)
 
+    config = CHAIN_CONFIG[transaction_event.network]
+
     web3 = get_web3_provider()
     for transfer in transfers:
 
         # 2. emitted by the SOLACE token
-        if web3.toChecksumAddress(transfer.address) != SOLACE_TOKEN_ADDRESS:
+        if web3.toChecksumAddress(transfer.address) != config[SOLACE_TOKEN]:
             continue
 
         # 3. that represent mints of new tokens (from is the 0 address)
@@ -36,7 +38,7 @@ def handle_transaction(transaction_event):
             continue
 
         # 4. to a teller address
-        if web3.toChecksumAddress(transfer.args['to']) not in TELLER_ADDRESSES:
+        if web3.toChecksumAddress(transfer.args['to']) not in config[TELLER_ADDRESSES]:
             continue
 
         # 5. where the value is greater than 1M tokens
@@ -52,7 +54,7 @@ def handle_transaction(transaction_event):
             'severity': FindingSeverity.Info,
             'metadata': {
                 'bond_teller_address': transfer.args['to'],
-                'bond_teller': TELLER_ADDRESSES[transfer.args['to']],
+                'bond_teller': config[TELLER_ADDRESSES][transfer.args['to']],
                 'value': transfer.args['value'],
             }
         }))

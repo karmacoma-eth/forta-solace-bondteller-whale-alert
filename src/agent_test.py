@@ -1,10 +1,11 @@
 from unittest.mock import Mock
-from .constants import ZERO_ADDRESS, SOLACE_TOKEN_ADDRESS, TELLER_ADDRESSES, TOKEN_THRESHOLD
-from forta_agent import create_transaction_event
+from .constants import ZERO_ADDRESS, SOLACE_TOKEN, TELLER_ADDRESSES, TOKEN_THRESHOLD, CHAIN_CONFIG
+from forta_agent import create_transaction_event, Network
 from .agent import handle_transaction
 from dataclasses import dataclass, field
 
 ETH_TELLER_ADDRESS='0x501ACe95141F3eB59970dD64af0405f6056FB5d8'
+chain_config = CHAIN_CONFIG[Network.MAINNET]
 
 def transfer_args(_from=ZERO_ADDRESS, _to=ETH_TELLER_ADDRESS, _value=TOKEN_THRESHOLD):
     return {
@@ -15,7 +16,7 @@ def transfer_args(_from=ZERO_ADDRESS, _to=ETH_TELLER_ADDRESS, _value=TOKEN_THRES
 
 @dataclass
 class TransferEvent:
-    address: str = SOLACE_TOKEN_ADDRESS
+    address: str = chain_config[SOLACE_TOKEN]
     blockNumber: int = 42
     args: dict = field(default_factory=transfer_args)
 
